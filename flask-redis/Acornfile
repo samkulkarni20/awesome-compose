@@ -1,0 +1,15 @@
+containers: {
+  redis: {
+    image: "redislabs/redismod"
+    ports: publish: "6379/tcp"
+  }
+  web: {
+    build: {
+      context: "."
+      target: "builder"
+    }
+    ports: publish: "8000/http"
+    dependsOn: ["redis"]
+    if args.dev { dirs: "/code": "./" }
+  }
+}
