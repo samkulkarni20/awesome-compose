@@ -1,0 +1,50 @@
+containers: {
+  db: {
+    image: "mariadb:10-focal"
+    // If you really want to use MySQL, uncomment the following line
+    //image: "mysql:8"
+    cmd: ["--default-authentication-plugin=mysql_native_password"]
+    // "restart: always" doesn't need to be converted.
+    // Acorn creates kubernetes deployments by default for all container instances, which restarts the pod, if it fails.
+    probes: {
+      "liveness": {
+        exec: {
+          command: [ "/bin/sh", "-c", "mysqladmin ping -h 127.0.0.1 --password=$MYSQL_ROOT_PASSWORD --silent" ]
+        }
+        periodSeconds: 3
+        failureThreshold: 5
+        initialDelaySeconds: 30
+      }
+    }
+    env: {
+      "MYSQL_DATABASE": "example"
+      "MYSQL_ROOT_PASSWORD": "secret://db-password/token"
+    }
+    dirs: "/var/lib/mysql": "volume://db-data"
+    ports: [ 3306, 33060 ]
+  }
+  backend: {
+    build: {
+      context: "backend"
+      target: "builder"
+    }
+    files: {
+      "/run/secrets/db-password": "secret://db-password/token?mode=0400"
+    }
+    ports: publish: "8000/http"
+    dependsOn: [ "db" ]
+  }
+  proxy: {
+    build: context: "proxy"
+    ports: publish: "80/http"
+    dependsOn: [ "backend" ]
+  }
+}
+
+volumes: {
+  "db-data": {}
+}
+
+secrets: {
+  "db-password": type: "token"
+}
