@@ -1,0 +1,43 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mysql-network-policy
+spec:
+  podSelector:
+    matchLabels:
+      acorn.io/container-name: db
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            acorn.io/container-name: proxy
+  egress:
+    - to:
+      - podSelector:
+          matchLabels:
+            acorn.io/container-name: proxy
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: nginx-network-policy
+spec:
+  podSelector:
+    matchLabels:
+      acorn.io/container-name: proxy
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            acorn.io/container-name: db
+  egress:
+    - to:
+      - podSelector:
+          matchLabels:
+            acorn.io/container-name: db
