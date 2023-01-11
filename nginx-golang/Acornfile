@@ -1,0 +1,18 @@
+containers: {
+  proxy: {
+    image: "nginx"
+    ports: publish: "80/http"
+    dependsOn: ["backend"]
+    dirs: {
+      "/etc/nginx/conf.d/default.conf": "./proxy/nginx.conf"
+    }
+  }
+
+  backend: {
+    build: {
+      context: "backend"
+      target: "builder"
+    }
+    ports: "80/http"
+  }
+}
